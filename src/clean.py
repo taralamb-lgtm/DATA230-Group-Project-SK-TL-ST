@@ -1,7 +1,12 @@
 import pandas as pd
+from pathlib import Path
 
-# File path
-file_path = r"C:\Users\taral\Documents\GitHub\DATA230-Group-Project-SK-TL-ST\data\raw\chicago_crime.xlsx"
+# Project root
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+# File paths
+file_path = BASE_DIR / "data" / "raw" / "chicago_crime.xlsx"
+output_path = BASE_DIR / "data" / "processed" / "crimes_cleaned.csv"
 
 # Load dataset
 df = pd.read_excel(file_path)
@@ -11,7 +16,7 @@ print("Raw shape:", df.shape)
 # Standardize column names
 df.columns = df.columns.str.strip().str.lower().str.replace(" ", "_")
 
-# Convert date column (change if yours is named differently)
+# Convert date column
 df["date"] = pd.to_datetime(df["date"], errors="coerce")
 
 # Drop rows without date
@@ -29,6 +34,6 @@ df = df.drop_duplicates()
 print("Cleaned shape:", df.shape)
 
 # Save cleaned dataset
-df.to_csv(r"C:\Users\taral\Documents\GitHub\DATA230-Group-Project-SK-TL-ST\data\processed\crimes_cleaned.csv", index=False)
+df.to_csv(output_path, index=False)
 
 print("Cleaning complete. File saved to data/processed/")
