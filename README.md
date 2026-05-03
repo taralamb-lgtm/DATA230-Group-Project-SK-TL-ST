@@ -56,6 +56,12 @@ data/
   processed/
     crimes_cleaned.csv
 
+notebooks/
+  Chicago Crime Analysis_ Districts, Arrest Rat...
+  Chicago Crime Overview_ Type, Time & Tre...
+  eda.ipynb
+  rapids_viz.ipynb
+
 outputs/
   classification_metrics.json
   confusion_matrix.csv
@@ -65,14 +71,18 @@ outputs/
 
 src/
   clean.py
-  train_classification.py
+  train_classification_model.py
 
 streamlit/
   streamlit_arrest_dashboard.py
 
 Power BI/
+  cluster_summary_for_powerbi.csv
+  cluster_top_types_for_powerbi.csv
   crime_arrest_classification_dashboard.pbix
-  clustering_dashboard.pbix
+  crime_clusters_for_powerbi.csv
+  DATA230_Clusterdash.pbix
+  powerbi.md
 
 requirements.txt
 README.md
@@ -112,6 +122,12 @@ The classification workflow uses features such as:
 The target variable is:
 
 - arrest
+
+Classification model file:
+
+```text
+src/train_classification_model.py
+```
 
 The model outputs were saved in the `outputs/` folder, including:
 
@@ -194,12 +210,18 @@ Power BI/crime_arrest_classification_dashboard.pbix
 
 A clustering Power BI dashboard was also added to support exploratory crime pattern analysis.
 
+The clustering dashboard uses Power BI-ready clustering files, including:
+
+- `cluster_summary_for_powerbi.csv`
+- `cluster_top_types_for_powerbi.csv`
+- `crime_clusters_for_powerbi.csv`
+
 The clustering dashboard helps show grouped crime patterns and supports visual analysis of how crime incidents cluster based on selected features.
 
 Power BI file:
 
 ```text
-Power BI/clustering_dashboard.pbix
+Power BI/DATA230_Clusterdash.pbix
 ```
 
 ---
