@@ -18,7 +18,7 @@ st.markdown(
 
 @st.cache_data
 def load_data():
-    file_path = "/Users/srijataduri/Downloads/crimes_cleaned.csv"
+    file_path = "data/processed/crimes_cleaned.csv"
     df = pd.read_csv(file_path)
 
     df.columns = (
