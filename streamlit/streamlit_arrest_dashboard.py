@@ -1,7 +1,9 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
-
+from pathlib import Path
+import json
+import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
@@ -11,6 +13,9 @@ from sklearn.metrics import accuracy_score
 
 st.set_page_config(page_title="Crime Arrest Prediction System", layout="wide")
 
+BASE_DIR = Path(__file__).resolve().parent.parent
+OUTPUT_DIR = BASE_DIR / "outputs"
+
 st.title("Crime Arrest Prediction System (Interactive)")
 st.markdown(
     "Use the input panel to estimate whether a reported crime is likely to result in an arrest."
@@ -18,7 +23,7 @@ st.markdown(
 
 @st.cache_data
 def load_data():
-    file_path = "data/processed/crimes_cleaned.csv"
+    file_path = BASE_DIR / "data" / "processed" / "crimes_cleaned.csv"
     df = pd.read_csv(file_path)
 
     df.columns = (
@@ -82,6 +87,18 @@ def load_data():
 
     return df
 
+@st.cache_data
+def load_metrics():
+    with open(OUTPUT_DIR / "classification_metrics.json", "r") as f:
+        return json.load(f)
+
+@st.cache_data
+def load_confusion_matrix():
+    return pd.read_csv(OUTPUT_DIR / "confusion_matrix.csv", index_col=0)
+
+@st.cache_data
+def load_roc_curve():
+    return pd.read_csv(OUTPUT_DIR / "roc_curve.csv")
 
 df = load_data()
 
@@ -127,6 +144,10 @@ def train_model(data):
 
 model, accuracy = train_model(df)
 
+metrics = load_metrics()
+cm_df = load_confusion_matrix()
+roc_df = load_roc_curve()
+
 st.sidebar.header("Crime Input Panel")
 
 crime_types = ["All"] + sorted(df["primary_type"].dropna().unique().tolist())
@@ -143,13 +164,15 @@ domestic = st.sidebar.selectbox("Domestic Case", domestic_options)
 default_chart_crime_type = df["primary_type"].mode()[0]
 chart_crime_type = default_chart_crime_type if crime_type == "All" else crime_type
 
-m1, m2, m3 = st.columns(3)
+m1, m2, m3, m4 = st.columns(4)
 with m1:
     st.metric("Total Records", f"{len(df):,}")
 with m2:
-    st.metric("Model Accuracy", f"{accuracy:.2%}")
+    st.metric("Accuracy", f"{metrics['accuracy']:.2%}")
 with m3:
-    st.metric("Dataset Arrest Rate", f"{df['arrest'].mean():.2%}")
+    st.metric("F1 Score", f"{metrics['f1']:.2%}")
+with m4:
+    st.metric("ROC-AUC", f"{metrics['roc_auc']:.2%}")
 
 col1, col2 = st.columns([1.2, 1])
 
@@ -207,6 +230,43 @@ with col2:
     else:
         st.info("Click the button to generate a prediction.")
 
+st.markdown("---")
+st.header("Model Evaluation")
+
+eval_col1, eval_col2 = st.columns(2)
+
+with eval_col1:
+    st.subheader("Confusion Matrix")
+
+    fig_cm, ax_cm = plt.subplots(figsize=(5, 4))
+    im = ax_cm.imshow(cm_df.values, aspect="auto")
+    ax_cm.set_xticks(np.arange(len(cm_df.columns)))
+    ax_cm.set_yticks(np.arange(len(cm_df.index)))
+    ax_cm.set_xticklabels(cm_df.columns)
+    ax_cm.set_yticklabels(cm_df.index)
+    ax_cm.set_xlabel("Predicted Label")
+    ax_cm.set_ylabel("Actual Label")
+    ax_cm.set_title("Confusion Matrix")
+
+    for i in range(cm_df.shape[0]):
+        for j in range(cm_df.shape[1]):
+            ax_cm.text(j, i, int(cm_df.values[i, j]), ha="center", va="center")
+
+    plt.colorbar(im, ax=ax_cm)
+    st.pyplot(fig_cm)
+
+with eval_col2:
+    st.subheader("ROC Curve")
+
+    fig_roc, ax_roc = plt.subplots(figsize=(5, 4))
+    ax_roc.plot(roc_df["fpr"], roc_df["tpr"], label=f"AUC = {metrics['roc_auc']:.3f}")
+    ax_roc.plot([0, 1], [0, 1], linestyle="--")
+    ax_roc.set_xlabel("False Positive Rate")
+    ax_roc.set_ylabel("True Positive Rate")
+    ax_roc.set_title("ROC Curve")
+    ax_roc.legend()
+    st.pyplot(fig_roc)
+    
 st.markdown("---")
 st.header("Machine Learning Insights")
 
